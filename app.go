@@ -1,11 +1,8 @@
 package main
 
 import (
+	"GlideWay/util"
 	"context"
-	"fmt"
-	"net"
-	"sync"
-	"time"
 )
 
 // App struct
@@ -24,31 +21,18 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-// /////////////////////////////////////////////////////////////////////////////
-// ScanPorts 扫描端口并返回开放的端口列表
-func (a *App) ScanPorts(target string) []int {
-	var openPorts []int
-	var mutex sync.Mutex
-	var wg sync.WaitGroup
-
-	// 扫描常用端口范围 1-1024
-	for port := 1; port <= 1024; port++ {
-		wg.Add(1)
-		go func(p int) {
-			defer wg.Done()
-
-			address := fmt.Sprintf("%s:%d", target, p)
-			conn, err := net.DialTimeout("tcp", address, time.Second)
-
-			if err == nil {
-				conn.Close()
-				mutex.Lock()
-				openPorts = append(openPorts, p)
-				mutex.Unlock()
-			}
-		}(port)
+// ExecuteFunction 调用动态注册的函数并返回结果
+func (a *App) ExecuteFunction(funcName string, params []interface{}) ([]interface{}, error) {
+	result, err := util.CallFunction(funcName, params...)
+	if err != nil {
+		return nil, err
 	}
 
-	wg.Wait()
-	return openPorts
+	// 检查 result 是否为切片类型
+	if results, ok := result.([]interface{}); ok {
+		return results, nil
+	}
+
+	// 如果不是切片，返回单个结果
+	return []interface{}{result}, nil
 }
