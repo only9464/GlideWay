@@ -100,25 +100,81 @@
     <!-- 扫描结果表格 -->
     <el-table 
       :data="openPorts" 
+      style="width: 100%"
+      :max-height="500"
       class="acrylic-effect"
-      :default-sort="{ prop: 'port', order: 'ascending' }"
     >
-      <el-table-column 
-        label="端口" 
-        prop="port" 
-        sortable
-      />
-      <template #empty>
-        <div class="empty-text">
-          暂无扫描数据
-        </div>
-      </template>
+      <el-table-column prop="port" label="端口" width="100" sortable />
+      <el-table-column prop="service" label="服务" width="120">
+        <template #default="scope">
+          <div class="service-info">
+            <span>{{ scope.row.service || '-' }}</span>
+            <el-tag v-if="scope.row.tls" size="small" type="success">TLS</el-tag>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column prop="product_name" label="产品名称" width="150">
+        <template #default="scope">
+          {{ scope.row.product_name || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="version" label="版本" width="120">
+        <template #default="scope">
+          {{ scope.row.version || '-' }}
+        </template>
+      </el-table-column>
+      <el-table-column prop="info" label="详细信息" min-width="200">
+        <template #default="scope">
+          <el-tooltip 
+            v-if="scope.row.info" 
+            :content="scope.row.info" 
+            placement="top" 
+            :show-after="500"
+          >
+            <span class="truncate-text">{{ scope.row.info }}</span>
+          </el-tooltip>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="更多信息" width="100">
+        <template #default="scope">
+          <el-popover
+            placement="left"
+            :width="300"
+            trigger="click"
+            v-if="hasAdditionalInfo(scope.row)"
+          >
+            <template #reference>
+              <el-button type="primary" link>详情</el-button>
+            </template>
+            <div class="additional-info">
+              <div v-if="scope.row.hostname" class="info-item">
+                <span class="info-label">主机名:</span>
+                <span class="info-value">{{ scope.row.hostname }}</span>
+              </div>
+              <div v-if="scope.row.operating_system" class="info-item">
+                <span class="info-label">操作系统:</span>
+                <span class="info-value">{{ scope.row.operating_system }}</span>
+              </div>
+              <div v-if="scope.row.device_type" class="info-item">
+                <span class="info-label">设备类型:</span>
+                <span class="info-value">{{ scope.row.device_type }}</span>
+              </div>
+              <div v-if="scope.row.probe_name" class="info-item">
+                <span class="info-label">探针名称:</span>
+                <span class="info-value">{{ scope.row.probe_name }}</span>
+              </div>
+            </div>
+          </el-popover>
+          <span v-else>-</span>
+        </template>
+      </el-table-column>
     </el-table>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useScannerStore } from '../stores/scannerStore'
 
@@ -159,6 +215,10 @@ const handleClear = () => store.setTarget('127.0.0.1')
 const validateIP = (ip) => {
   const pattern = /^(\d{1,3}\.){3}\d{1,3}$/
   return pattern.test(ip) && ip.split('.').every(num => parseInt(num) >= 0 && parseInt(num) <= 255)
+}
+
+const hasAdditionalInfo = (row) => {
+  return row.hostname || row.operating_system || row.device_type || row.probe_name
 }
 
 const handleStop = async () => {
@@ -354,26 +414,79 @@ const handleScan = async () => {
   margin: 10px 0;
 }
 
-.input-item :deep(.el-input__wrapper) {
-  background-color: white;
-  box-shadow: 0 0 0 1px #dcdfe6 inset !important;
-  border-radius: 4px;
-  transition: all 0.3s ease;
+.service-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.input-item :deep(.el-input__inner) {
-  text-align: center;
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+  display: inline-block;
 }
 
-.acrylic-effect {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+.additional-info {
+  padding: 8px;
 }
 
-.scan-button {
-  min-width: 80px;
+.info-item {
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  color: #909399;
+  font-size: 13px;
+}
+
+.info-value {
+  color: #303133;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+/* 表格样式 */
+.el-table {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+}
+
+:deep(.el-table__inner-wrapper) {
+  border-radius: 12px;
+}
+
+:deep(.el-table__header) {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  overflow: hidden;
+}
+
+:deep(.el-table__body) {
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  overflow: hidden;
+}
+
+:deep(.el-table__row) {
+  background-color: transparent !important;
+}
+
+:deep(.el-table__row:hover) {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+:deep(.el-table__header-wrapper) {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+:deep(.el-table__cell) {
+  background-color: transparent !important;
 }
 
 /* 深色模式适配 */
@@ -402,5 +515,47 @@ const handleScan = async () => {
   .empty-text {
     color: rgba(255, 255, 255, 0.6);
   }
+
+  .info-label {
+    color: #a6a6a6;
+  }
+
+  .info-value {
+    color: #e6e6e6;
+  }
+
+  .el-table {
+    --el-table-border-color: rgba(255, 255, 255, 0.1);
+    --el-table-header-bg-color: rgba(255, 255, 255, 0.05);
+    --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.08);
+    --el-table-text-color: #e6e6e6;
+    --el-table-header-text-color: #ffffff;
+  }
+
+  :deep(.el-table__header-wrapper) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  :deep(.el-table__row:hover) {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  :deep(.el-table) {
+    background-color: transparent;
+  }
+
+  :deep(.el-table__cell) {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  :deep(.el-table__header th.el-table__cell) {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  :deep(.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell) {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
 }
 </style>
+

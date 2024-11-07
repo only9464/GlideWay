@@ -63,9 +63,21 @@ export const useScannerStore = defineStore('scanner', {
     },
     
     addPort(portInfo) {
+      // 扩展端口信息，包含所有指纹识别结果
       this.openPorts.push({
-        port: portInfo.port
+        port: portInfo.port,
+        protocol: portInfo.protocol,
+        service: portInfo.service,
+        product_name: portInfo.product_name,
+        version: portInfo.version,
+        info: portInfo.info,
+        hostname: portInfo.hostname,
+        operating_system: portInfo.operating_system,
+        device_type: portInfo.device_type,
+        probe_name: portInfo.probe_name,
+        tls: portInfo.tls
       })
+      // 按端口号排序
       this.openPorts.sort((a, b) => a.port - b.port)
     },
     
@@ -91,6 +103,37 @@ export const useScannerStore = defineStore('scanner', {
       this.startPort = 1
       this.endPort = 65535
       this.maxThreads = 500
+    },
+
+    // 新增：检查端口是否有额外信息
+    hasAdditionalInfo(port) {
+      return !!(port.hostname || port.operating_system || port.device_type || port.probe_name)
+    },
+
+    // 新增：获取端口的服务描述
+    getServiceDescription(port) {
+      const parts = []
+      if (port.service) parts.push(port.service)
+      if (port.product_name) parts.push(port.product_name)
+      if (port.version) parts.push(port.version)
+      return parts.join(' - ') || '未知服务'
+    },
+
+    // 新增：导出扫描结果
+    exportResults() {
+      return this.openPorts.map(port => ({
+        port: port.port,
+        service: this.getServiceDescription(port),
+        details: {
+          protocol: port.protocol,
+          tls: port.tls,
+          info: port.info,
+          hostname: port.hostname,
+          operating_system: port.operating_system,
+          device_type: port.device_type,
+          probe_name: port.probe_name
+        }
+      }))
     }
   }
 })

@@ -7,6 +7,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/lcvvvv/gonmap"
 )
 
 type ScanConfig struct {
@@ -18,8 +20,17 @@ type ScanConfig struct {
 }
 
 type PortInfo struct {
-	Port     int    `json:"port"`
-	Protocol string `json:"protocol"`
+	Port            int    `json:"port"`
+	Protocol        string `json:"protocol"`
+	Service         string `json:"service"`
+	ProductName     string `json:"product_name"`
+	Version         string `json:"version"`
+	Info            string `json:"info"`
+	Hostname        string `json:"hostname"`
+	OperatingSystem string `json:"operating_system"`
+	DeviceType      string `json:"device_type"`
+	ProbeName       string `json:"probe_name"`
+	TLS             bool   `json:"tls"`
 }
 
 type PortCallback func(PortInfo)
@@ -33,6 +44,10 @@ func ScanPortsCombined(ctx context.Context, config ScanConfig, callback PortCall
 	semaphore := make(chan struct{}, config.MaxThreads)
 	var scanned int32
 
+	// 创建gonmap实例
+	scanner := gonmap.New()
+	scanner.SetTimeout(config.Timeout)
+
 	for port := config.StartPort; port <= config.EndPort; port++ {
 		select {
 		case <-ctx.Done():
@@ -45,7 +60,6 @@ func ScanPortsCombined(ctx context.Context, config ScanConfig, callback PortCall
 				defer func() {
 					wg.Done()
 					<-semaphore
-					// 恢复任何可能的panic
 					if r := recover(); r != nil {
 						fmt.Printf("Recovered from panic in port scan goroutine: %v\n", r)
 					}
@@ -68,14 +82,33 @@ func ScanPortsCombined(ctx context.Context, config ScanConfig, callback PortCall
 
 				if err == nil && conn != nil {
 					conn.Close()
+
+					// 对开放端口进行指纹识别
+					status, response := scanner.ScanTimeout(config.Target, p, config.Timeout)
+
+					portInfo := PortInfo{
+						Port:     p,
+						Protocol: "tcp",
+					}
+
+					if status == gonmap.Matched && response != nil {
+						fp := response.FingerPrint
+						portInfo.Service = fp.Service
+						portInfo.ProductName = fp.ProductName
+						portInfo.Version = fp.Version
+						portInfo.Info = fp.Info
+						portInfo.Hostname = fp.Hostname
+						portInfo.OperatingSystem = fp.OperatingSystem
+						portInfo.DeviceType = fp.DeviceType
+						portInfo.ProbeName = fp.ProbeName
+						portInfo.TLS = response.TLS
+					}
+
 					select {
 					case <-ctx.Done():
 						return
 					default:
-						callback(PortInfo{
-							Port:     p,
-							Protocol: "tcp",
-						})
+						callback(portInfo)
 					}
 				}
 			}(port)

@@ -13,7 +13,6 @@ import (
 
 type scanControl struct {
 	cancel     context.CancelFunc
-	mutex      sync.Mutex
 	totalPorts int32
 	scanned    int32
 }
@@ -22,6 +21,12 @@ var (
 	currentScan *scanControl
 	scanMutex   sync.Mutex
 )
+
+type ScanProgress struct {
+	CurrentPort int32  `json:"current_port"`
+	TotalPorts  int32  `json:"total_ports"`
+	Status      string `json:"status"`
+}
 
 func (a *App) ScanPorts(IP string, startPort int, endPort int, maxThreads int) error {
 	if a == nil || a.ctx == nil {
@@ -88,7 +93,20 @@ func (a *App) ScanPorts(IP string, startPort int, endPort int, maxThreads int) e
 					"status":       "scanning",
 				})
 			} else {
-				runtime.EventsEmit(a.ctx, "port-found", portInfo)
+				// 发送完整的端口信息，包括指纹识别结果
+				runtime.EventsEmit(a.ctx, "port-found", map[string]interface{}{
+					"port":             portInfo.Port,
+					"protocol":         portInfo.Protocol,
+					"service":          portInfo.Service,
+					"product_name":     portInfo.ProductName,
+					"version":          portInfo.Version,
+					"info":             portInfo.Info,
+					"hostname":         portInfo.Hostname,
+					"operating_system": portInfo.OperatingSystem,
+					"device_type":      portInfo.DeviceType,
+					"probe_name":       portInfo.ProbeName,
+					"tls":              portInfo.TLS,
+				})
 			}
 		})
 
@@ -157,12 +175,6 @@ func (a *App) GetScanStatus() string {
 		return "running"
 	}
 	return "idle"
-}
-
-type ScanProgress struct {
-	CurrentPort int32  `json:"current_port"`
-	TotalPorts  int32  `json:"total_ports"`
-	Status      string `json:"status"`
 }
 
 func (a *App) GetScanProgress() ScanProgress {
