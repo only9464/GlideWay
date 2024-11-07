@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import ScannerView from '../views/ScannerView.vue'
-// import About from './components/About.vue'
+import ScannerPortsView from '../views/ScannerPortsView.vue'
+import ScannerUrlView from '../views/ScannerUrlView.vue'
 
 const routes = [
-  { path: '/', component: ScannerView },
-  // { path: '/about', component: About }
+  { path: '/', component: ScannerPortsView },
+  { path: '/urlScan', component: ScannerUrlView }
 ]
 
 const router = createRouter({

@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-// 引入动态调用的接口
-import { ExecuteFunction } from '../../wailsjs/go/main/App'
+import { ScanPorts } from '../../wailsjs/go/main/App'
 
 const target = ref('')
 const scanning = ref(false)
@@ -25,19 +24,18 @@ async function handleScan() {
   openPorts.value = []
 
   if (!target.value) {
-    error.value = '请输入你要干爆的IP地址'
+    error.value = '请输入IP地址'
     return
   }
 
   if (!validateIP(target.value)) {
-    error.value = '请输入有效的IIIIIIIIIIIIP地址'
+    error.value = '请输入有效的IP地址'
     return
   }
 
   try {
     scanning.value = true
-    console.log(target.value)
-    const ports = await ExecuteFunction('ScanPorts', [target.value])
+    const ports = await ScanPorts(target.value)
     openPorts.value = ports.sort((a, b) => a - b)
   } catch (err) {
     error.value = '扫描出错: ' + err.message
@@ -45,7 +43,6 @@ async function handleScan() {
     scanning.value = false
   }
 }
-
 </script>
 
 <template>
@@ -55,14 +52,14 @@ async function handleScan() {
         v-model="target"
         type="text"
         class="border p-2 rounded mr-2"
-        placeholder="输入NIDE IP地址"
+        placeholder="输入url"
       />
       <button
         @click="handleScan"
         :disabled="scanning"
         class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:bg-gray-400"
       >
-        {{ scanning ? '扫描中...' : '扫描' }}
+        {{ scanning ? '扫描中...' : '扫描url' }}
       </button>
     </div>
 
@@ -86,5 +83,5 @@ async function handleScan() {
 </template>
 
 <style scoped>
-/* 可根据需要添加样式 */
+
 </style>
