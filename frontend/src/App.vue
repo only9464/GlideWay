@@ -55,11 +55,11 @@ import Sidebar from './components/nav/Sidebar.vue'
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0);
   border-radius: 4px;
 }
 
 .content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0);
 }
 </style>

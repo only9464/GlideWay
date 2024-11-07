@@ -67,7 +67,7 @@
 }
 
 .nav-link {
-  color: #2c3e50; /* 更深的蓝灰色 */
+  color: #000000; /* 更深的蓝灰色 */
   text-decoration: none;
   padding: 12px 24px;
   display: block;
@@ -77,7 +77,7 @@
   border-radius: 8px;
   font-weight: 600; /* 加粗 */
   letter-spacing: 0.5px;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5); /* 白色文字阴影 */
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3); /* 白色文字阴影 */
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.3),
@@ -91,12 +91,12 @@
     rgba(255, 255, 255, 0.4),
     rgba(255, 255, 255, 0.3)
   );
-  color: #1a365d; /* 悬停时更深的颜色 */
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+  color: #4eb157; /* 悬停时更深的颜色 */
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
 .nav-link:active {
-  background: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .router-link-active {
@@ -105,9 +105,9 @@
     rgba(255, 255, 255, 0.5),
     rgba(255, 255, 255, 0.4)
   );
-  color: #1a365d;
+  color: #4eb157;
   font-weight: 700;
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.7);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.01);
 }
 
 .nav-link::before {
