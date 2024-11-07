@@ -104,6 +104,7 @@
       :max-height="500"
       class="acrylic-effect"
     >
+      <el-table-column type="index" label="序号" width="50" />
       <el-table-column prop="port" label="端口" width="100" sortable />
       <el-table-column prop="service" label="服务" width="120">
         <template #default="scope">
@@ -259,7 +260,7 @@ const handleScan = async () => {
     return
   }
 
-  try {
+ try {
     // 清理之前的事件监听
     window.runtime.EventsOff("port-found")
     window.runtime.EventsOff("scan-status")
@@ -279,6 +280,11 @@ const handleScan = async () => {
       if (status === "completed") {
         store.setScanComplete(true)
         ElMessage.success('扫描完成')
+        
+        // 扫描完成后卸载事件监听器
+        window.runtime.EventsOff("port-found")
+        window.runtime.EventsOff("scan-status")
+        window.runtime.EventsOff("scan-progress")
       } else if (status === "error") {
         store.setIsScanning(false)
         store.setScanComplete(false)

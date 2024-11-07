@@ -4,12 +4,10 @@ go 1.21
 
 toolchain go1.23.2
 
-require (
-	github.com/miekg/dns v1.1.50
-	github.com/wailsapp/wails/v2 v2.9.2
-)
+require github.com/wailsapp/wails/v2 v2.9.2
 
 require (
+	github.com/miekg/dns v1.1.50 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 )
