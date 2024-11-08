@@ -322,21 +322,32 @@ window.runtime.EventsOn("dirsearch-progress", (progress) => {
 
 const handleStop = async () => {
   try {
-    await window.go.main.App.StopDirsearch()
+    // 1. 立即移除所有事件监听，确保不再接收任何后端事件
+    window.runtime.EventsOff("path-found")
+    window.runtime.EventsOff("dirsearch-status")
+    window.runtime.EventsOff("dirsearch-progress")
+    window.runtime.EventsOff("dirsearch-error")  // 如果有错误事件监听也要移除
+
+    // 2. 更新前端状态为停止中
     store.setIsScanning(false)
-    ElMessage.info('正在停止扫描...')
+    store.setScanStatus('stopping')
+
+    // 3. 通知后端停止扫描
+    await window.go.main.App.StopDirsearch()
+    
+    // 4. 显示停止消息
+    ElMessage.info('已停止扫描')
+
   } catch (err) {
+    // 5. 如果出错，也要确保前端状态正确
+    store.setIsScanning(false)
+    store.setScanStatus('error')
     ElMessage.error('停止扫描失败: ' + err.message)
+  } finally {
+    // 6. 确保在任何情况下都重置进度显示
+    store.setShowProgress(false)
   }
 }
-
-// 组件卸载时保存状态
-onUnmounted(() => {
-  localStorage.setItem('dirsearch_target', target.value)
-  localStorage.setItem('dirsearch_selected_file', JSON.stringify(selectedFile.value))
-  localStorage.setItem('dirsearch_max_threads', maxThreads.value)
-  window.removeEventListener('resize', handleResize)
-})
 
 // 处理窗口大小变化
 const handleResize = () => {

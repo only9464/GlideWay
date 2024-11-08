@@ -323,14 +323,18 @@ func (a *App) StopDirsearch() error {
 	defer dirsearchMutex.Unlock()
 
 	if currentDirsearch != nil && currentDirsearch.cancel != nil {
+		// 调用 context 的 cancel 函数停止扫描
 		currentDirsearch.cancel()
-		// 立即发送状态更新
-		runtime.EventsEmit(a.ctx, "dirsearch-status", "cancelled")
-		// 发送最终进度
+
+		// 发送状态更新事件
+		runtime.EventsEmit(a.ctx, "dirsearch-status", "stopping")
+
+		// 发送最终进度事件
 		runtime.EventsEmit(a.ctx, "dirsearch-progress", DirsearchProgress{
 			Current: int(atomic.LoadInt32(&currentDirsearch.scanned)),
 			Total:   int(atomic.LoadInt32(&currentDirsearch.totalPaths)),
 		})
+
 		fmt.Println("正在停止目录扫描...")
 		return nil
 	}
