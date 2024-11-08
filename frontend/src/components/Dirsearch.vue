@@ -34,7 +34,7 @@
           placeholder="最大线程"
           type="number"
           :min="1"
-          :max="100"
+          :max="10000"
         ></el-input>
       </div>
     </div>
@@ -233,8 +233,9 @@ const handleClear = () => {
 
 // 格式化百分比显示
 const percentageFormat = (percentage) => {
-  return percentage === 100 ? '完成' : `${percentage}%`
+  return percentage === 100 ? '完成' : `${percentage.toFixed(2)}%`
 }
+
 
 // 获取状态码类型
 const getStatusCodeType = (code) => {

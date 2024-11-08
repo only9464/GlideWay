@@ -26,22 +26,18 @@ type PathInfo struct {
 type PathCallback func(PathInfo)
 type ProgressCallback func(current, total int)
 
-// 添加全局变量
 var (
-	actualScanned int32 // 添加这个全局变量用于跟踪实际扫描进度
+	actualScanned int32
 )
 
 func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int, pathCallback PathCallback, progressCallback ProgressCallback) error {
-	// 重置计数器
 	atomic.StoreInt32(&actualScanned, 0)
 
-	// 读取字典文件
 	content, err := os.ReadFile(dictPath)
 	if err != nil {
 		return fmt.Errorf("读取字典文件失败: %w", err)
 	}
 
-	// 按行分割并过滤空行
 	paths := make([]string, 0)
 	for _, line := range strings.Split(string(content), "\n") {
 		line = strings.TrimSpace(line)
@@ -55,15 +51,22 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		return fmt.Errorf("字典文件为空")
 	}
 
-	// 立即通知前端总路径数
 	progressCallback(0, totalPaths)
 
-	// 创建全局选项
-	globalopts := &libgobuster.Options{
-		Threads: 1, // 每个工作协程使用单独的插件实例
+	// 自动计算插件实例数和线程数以更接近maxThreads
+	numPlugins := maxThreads / 10
+	if numPlugins < 1 {
+		numPlugins = 1
+	}
+	threadsPerPlugin := maxThreads / numPlugins
+	if threadsPerPlugin < 1 {
+		threadsPerPlugin = 1
 	}
 
-	// 创建目录扫描选项
+	globalopts := &libgobuster.Options{
+		Threads: threadsPerPlugin,
+	}
+
 	opts := gobusterdir.NewOptionsDir()
 	opts.URL = target
 	opts.NoTLSValidation = true
@@ -72,22 +75,20 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 	opts.StatusCodesParsed.AddRange([]int{200, 201, 202, 203, 204, 301, 302, 307, 308, 401, 403, 405})
 	opts.Timeout = time.Second * 10
 
-	// 增加缓冲区大小以减少阻塞
-	results := make(chan libgobuster.Result, maxThreads*20)
-	errorChan := make(chan error, maxThreads*10)
-	pathChan := make(chan string, maxThreads*50)
+	bufferSize := maxThreads * 20
+	results := make(chan libgobuster.Result, bufferSize)
+	errorChan := make(chan error, bufferSize)
+	pathChan := make(chan string, bufferSize*2)
 	doneChan := make(chan struct{})
 
 	var wg sync.WaitGroup
 	var isStopped atomic.Value
 	isStopped.Store(false)
 
-	// 增加一个关闭标志
 	var closeOnce sync.Once
 
-	// 创建插件实例池
-	plugins := make([]*gobusterdir.GobusterDir, maxThreads)
-	for i := 0; i < maxThreads; i++ {
+	plugins := make([]*gobusterdir.GobusterDir, numPlugins)
+	for i := 0; i < numPlugins; i++ {
 		plugin, err := gobusterdir.NewGobusterDir(globalopts, opts)
 		if err != nil {
 			return fmt.Errorf("创建扫描插件失败: %w", err)
@@ -95,7 +96,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		plugins[i] = plugin
 	}
 
-	// 清理函数
 	cleanup := func() {
 		isStopped.Store(true)
 		closeOnce.Do(func() {
@@ -108,8 +108,7 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		})
 	}
 
-	// 启动工作协程池
-	for i := 0; i < maxThreads; i++ {
+	for i := 0; i < numPlugins; i++ {
 		wg.Add(1)
 		go func(workerID int) {
 			defer wg.Done()
@@ -136,7 +135,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}(i)
 	}
 
-	// 发送路径到工作通道
 	go func() {
 		defer func() {
 			closeOnce.Do(func() {
@@ -144,7 +142,7 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			})
 		}()
 
-		batchSize := 100
+		batchSize := maxThreads * 10
 		batch := make([]string, 0, batchSize)
 
 		for _, path := range paths {
@@ -165,7 +163,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			}
 		}
 
-		// 处理剩余的路径
 		for _, p := range batch {
 			select {
 			case <-ctx.Done():
@@ -175,12 +172,15 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}
 	}()
 
-	// 进度更新
+	var (
+		lastScanned   int32 = 0
+		lastTimestamp       = time.Now()
+	)
+
 	go func() {
-		ticker := time.NewTicker(time.Millisecond * 100)
+		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
 
-		var lastReported int32 = -1
 		for {
 			select {
 			case <-ctx.Done():
@@ -190,16 +190,22 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			case <-ticker.C:
 				if !isStopped.Load().(bool) {
 					current := atomic.LoadInt32(&actualScanned)
-					if current != lastReported {
-						progressCallback(int(current), totalPaths)
-						lastReported = current
-					}
+					now := time.Now()
+					speed := float64(current-lastScanned) / now.Sub(lastTimestamp).Seconds()
+					fmt.Printf("扫描进度: %d/%d (%.2f%%), 实际速度: %.1f/s, 线程数: %d, 插件数: %d\n",
+						current, totalPaths,
+						float64(current)/float64(totalPaths)*100,
+						speed,
+						threadsPerPlugin,
+						numPlugins)
+					lastScanned = current
+					lastTimestamp = now
+					progressCallback(int(current), totalPaths)
 				}
 			}
 		}
 	}()
 
-	// 等待所有工作完成
 	go func() {
 		wg.Wait()
 		if !isStopped.Load().(bool) {
@@ -210,7 +216,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}
 	}()
 
-	// 处理结果
 	for {
 		select {
 		case <-ctx.Done():
@@ -232,9 +237,8 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 	}
 }
 
-// 优化处理单个路径的函数
 func processPath(ctx context.Context, plugin *gobusterdir.GobusterDir, path string, results chan libgobuster.Result, errorChan chan error) error {
-	defer atomic.AddInt32(&actualScanned, 1) // 确保在处理完路径后增加计数
+	defer atomic.AddInt32(&actualScanned, 1)
 
 	select {
 	case <-ctx.Done():
@@ -248,7 +252,6 @@ func processPath(ctx context.Context, plugin *gobusterdir.GobusterDir, path stri
 	}
 }
 
-// 处理结果
 func handleResult(result libgobuster.Result, pathCallback PathCallback) {
 	found := result.(gobusterdir.Result)
 	pathInfo := PathInfo{
