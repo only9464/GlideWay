@@ -11,7 +11,8 @@ export const useDirsearchStore = defineStore('dirsearch', {
       prop: null,
       order: null
     },
-    scanStatus: 'idle'   
+    scanStatus: 'idle',
+    scanSpeed: 0,  // 新增扫描速度状态
   }),
   
   getters: {
@@ -45,6 +46,7 @@ export const useDirsearchStore = defineStore('dirsearch', {
       this.totalPaths = 0
       this.isScanning = false
       this.scanStatus = 'idle'
+      this.scanSpeed = 0  // 重置扫描速度
     },
     
     setIsScanning(value) {
@@ -53,6 +55,7 @@ export const useDirsearchStore = defineStore('dirsearch', {
         if (this.scanStatus === 'scanning') {
           this.scanStatus = 'cancelled'
         }
+        this.scanSpeed = 0  // 停止扫描时重置速度
       } else {
         this.scanStatus = 'scanning'
         this.showProgress = true
@@ -63,6 +66,7 @@ export const useDirsearchStore = defineStore('dirsearch', {
       this.scanStatus = status
       if (status === 'completed' || status === 'cancelled' || status === 'error') {
         this.isScanning = false
+        this.scanSpeed = 0  // 扫描结束时重置速度
       }
     },
 
@@ -82,6 +86,12 @@ export const useDirsearchStore = defineStore('dirsearch', {
     setTotalPaths(value) {
       if (typeof value === 'number' && value > 0) {
         this.totalPaths = value
+      }
+    },
+
+    setScanSpeed(value) {
+      if (typeof value === 'number') {
+        this.scanSpeed = value
       }
     },
 
@@ -114,6 +124,7 @@ export const useDirsearchStore = defineStore('dirsearch', {
     setComplete() {
       this.isScanning = false
       this.scanStatus = 'completed'
+      this.scanSpeed = 0  // 完成时重置速度
     },
 
     exportResults() {

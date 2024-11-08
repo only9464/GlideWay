@@ -196,11 +196,11 @@ func (a *App) GetScanProgress() ScanProgress {
 }
 
 // ... 前面的代码保持不变 ...
-
 // 目录扫描相关结构体和变量
 type DirsearchProgress struct {
-	Current int `json:"current"`
-	Total   int `json:"total"`
+	Current int     `json:"current"`
+	Total   int     `json:"total"`
+	Speed   float64 `json:"speed"` // 添加速度字段
 }
 
 type PathResult struct {
@@ -242,6 +242,11 @@ func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) err
 		scanned:    0,
 		totalPaths: 0,
 	}
+
+	var (
+		lastScanned   int32
+		lastTimestamp = time.Now()
+	)
 
 	go func() {
 		defer func() {
@@ -287,6 +292,13 @@ func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) err
 					dirsearchMutex.Unlock()
 					return
 				}
+
+				// 计算扫描速度
+				now := time.Now()
+				speed := float64(current-int(lastScanned)) / now.Sub(lastTimestamp).Seconds()
+				lastScanned = int32(current)
+				lastTimestamp = now
+
 				atomic.StoreInt32(&currentDirsearch.scanned, int32(current))
 				atomic.StoreInt32(&currentDirsearch.totalPaths, int32(total))
 				dirsearchMutex.Unlock()
@@ -294,8 +306,9 @@ func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) err
 				progress := DirsearchProgress{
 					Current: current,
 					Total:   total,
+					Speed:   speed,
 				}
-				runtime.EventsEmit(a.ctx, "dirsearch-progress", progress) // 这里发送进度事件
+				runtime.EventsEmit(a.ctx, "dirsearch-progress", progress)
 			},
 		)
 
@@ -333,6 +346,7 @@ func (a *App) StopDirsearch() error {
 		runtime.EventsEmit(a.ctx, "dirsearch-progress", DirsearchProgress{
 			Current: int(atomic.LoadInt32(&currentDirsearch.scanned)),
 			Total:   int(atomic.LoadInt32(&currentDirsearch.totalPaths)),
+			Speed:   0, // 停止时速度为0
 		})
 
 		fmt.Println("正在停止目录扫描...")
@@ -362,11 +376,13 @@ func (a *App) GetDirsearchProgress() DirsearchProgress {
 		return DirsearchProgress{
 			Current: 0,
 			Total:   0,
+			Speed:   0,
 		}
 	}
 
 	return DirsearchProgress{
 		Current: int(atomic.LoadInt32(&currentDirsearch.scanned)),
 		Total:   int(atomic.LoadInt32(&currentDirsearch.totalPaths)),
+		Speed:   0, // 这里可以添加实时速度计算，但需要维护额外的状态
 	}
 }

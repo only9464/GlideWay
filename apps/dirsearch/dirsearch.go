@@ -172,10 +172,10 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}
 	}()
 
-	var (
-		lastScanned   int32 = 0
-		lastTimestamp       = time.Now()
-	)
+	// var (
+	// 	lastScanned   int32 = 0
+	// 	lastTimestamp       = time.Now()
+	// )
 
 	go func() {
 		ticker := time.NewTicker(time.Second)
@@ -190,16 +190,16 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			case <-ticker.C:
 				if !isStopped.Load().(bool) {
 					current := atomic.LoadInt32(&actualScanned)
-					now := time.Now()
-					speed := float64(current-lastScanned) / now.Sub(lastTimestamp).Seconds()
-					fmt.Printf("扫描进度: %d/%d (%.2f%%), 实际速度: %.1f/s, 线程数: %d, 插件数: %d\n",
-						current, totalPaths,
-						float64(current)/float64(totalPaths)*100,
-						speed,
-						threadsPerPlugin,
-						numPlugins)
-					lastScanned = current
-					lastTimestamp = now
+					// now := time.Now()
+					// speed := float64(current-lastScanned) / now.Sub(lastTimestamp).Seconds()
+					// fmt.Printf("扫描进度: %d/%d (%.2f%%), 实际速度: %.1f/s, 线程数: %d, 插件数: %d\n",
+					// 	current, totalPaths,
+					// 	float64(current)/float64(totalPaths)*100,
+					// 	speed,
+					// 	threadsPerPlugin,
+					// 	numPlugins)
+					// lastScanned = current
+					// lastTimestamp = now
 					progressCallback(int(current), totalPaths)
 				}
 			}

@@ -49,6 +49,9 @@
         </div>
         <div class="status-group right">
           <div class="info-box acrylic-mini">
+            <span class="status-text">当前扫描速度：{{ formatSpeed(store.scanSpeed) }}个/s</span>
+          </div>
+          <div class="info-box acrylic-mini">
             <span class="status-text">{{ store.scannedPaths }}/{{ store.totalPaths }} 已扫描</span>
           </div>
           <el-button
@@ -236,6 +239,11 @@ const percentageFormat = (percentage) => {
   return percentage === 100 ? '完成' : `${percentage.toFixed(2)}%`
 }
 
+// 格式化速度显示
+const formatSpeed = (speed) => {
+  if (speed === 0) return '0'
+  return speed.toFixed(1)
+}
 
 // 获取状态码类型
 const getStatusCodeType = (code) => {
@@ -294,14 +302,14 @@ const handleScan = async () => {
       }
     })
 
-window.runtime.EventsOn("dirsearch-progress", (progress) => {
-    // 确保进度对象包含必要的字段
-    if (progress && typeof progress.current === 'number' && typeof progress.total === 'number') {
+    window.runtime.EventsOn("dirsearch-progress", (progress) => {
+      if (progress && typeof progress.current === 'number' && typeof progress.total === 'number') {
         store.setScannedPaths(progress.current)
         store.setTotalPaths(progress.total)
-        console.log(`Progress update: ${progress.current}/${progress.total}`) // 添加日志
-    }
-})
+        store.setScanSpeed(progress.speed)
+        console.log(`Progress update: ${progress.current}/${progress.total}, Speed: ${progress.speed}/s`)
+      }
+    })
 
     // 启动扫描
     await window.go.main.App.StartDirsearch(
@@ -359,6 +367,11 @@ const handleResize = () => {
 onMounted(() => {
   window.addEventListener('resize', handleResize)
   handleResize()
+})
+
+// 组件卸载时清理
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
