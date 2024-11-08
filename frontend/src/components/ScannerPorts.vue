@@ -104,7 +104,7 @@
       :max-height="500"
       class="acrylic-effect"
     >
-      <el-table-column type="index" label="序号" width="50" />
+      <el-table-column type="index" label="序号" width="60" />
       <el-table-column prop="port" label="端口" width="100" sortable />
       <el-table-column prop="service" label="服务" width="120">
         <template #default="scope">

@@ -9,8 +9,8 @@
             </router-link>
           </li>
           <li>
-            <router-link to="/urlScan" class="nav-link">
-              <span>url扫描器</span>
+            <router-link to="/dirsearch" class="nav-link">
+              <span>目录扫描器</span>
             </router-link>
           </li>
         </ul>

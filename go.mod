@@ -7,12 +7,14 @@ toolchain go1.23.2
 require github.com/wailsapp/wails/v2 v2.9.2
 
 require (
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
 )
 
 require (
+	github.com/OJ/gobuster/v3 v3.6.0
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/godbus/dbus/v5 v5.1.0 // indirect
