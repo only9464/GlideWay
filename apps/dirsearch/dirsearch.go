@@ -240,6 +240,17 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 func processPath(ctx context.Context, plugin *gobusterdir.GobusterDir, path string, results chan libgobuster.Result, errorChan chan error) error {
 	defer atomic.AddInt32(&actualScanned, 1)
 
+	// 添加URL编码处理
+	path = strings.ReplaceAll(path, "%", "%25") // 首先处理%符号
+	path = strings.Map(func(r rune) rune {
+		switch r {
+		case '#', '&', '=', '+', '!', '@', '$', '^', '~':
+			return -1 // 移除这些特殊字符
+		default:
+			return r
+		}
+	}, path)
+
 	select {
 	case <-ctx.Done():
 		return context.Canceled
