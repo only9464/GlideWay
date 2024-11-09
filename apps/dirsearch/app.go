@@ -198,34 +198,3 @@ func (a *App) StopDirsearch() error {
 
 	return fmt.Errorf("no dirsearch is running")
 }
-
-// GetDirsearchStatus 获取目录扫描状态
-func (a *App) GetDirsearchStatus() string {
-	dirsearchMutex.Lock()
-	defer dirsearchMutex.Unlock()
-
-	if currentDirsearch != nil {
-		return "running"
-	}
-	return "idle"
-}
-
-// GetDirsearchProgress 获取目录扫描进度
-func (a *App) GetDirsearchProgress() DirsearchProgress {
-	dirsearchMutex.Lock()
-	defer dirsearchMutex.Unlock()
-
-	if currentDirsearch == nil {
-		return DirsearchProgress{
-			Current: 0,
-			Total:   0,
-			Speed:   0,
-		}
-	}
-
-	return DirsearchProgress{
-		Current: int(atomic.LoadInt32(&currentDirsearch.scanned)),
-		Total:   int(atomic.LoadInt32(&currentDirsearch.totalPaths)),
-		Speed:   0, // 这里可以添加实时速度计算，但需要维护额外的状态
-	}
-}

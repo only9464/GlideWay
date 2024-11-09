@@ -1,24 +1,3 @@
-export namespace dirsearch {
-	
-	export class DirsearchProgress {
-	    current: number;
-	    total: number;
-	    speed: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new DirsearchProgress(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.current = source["current"];
-	        this.total = source["total"];
-	        this.speed = source["speed"];
-	    }
-	}
-
-}
-
 export namespace main {
 	
 	export class ScanProgress {
