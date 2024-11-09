@@ -26,7 +26,7 @@ const result = ref(null)
 // 定义方法，调用 Go 后端的 Gitdorker 方法并保存结果
 async function calculateSum() {
   try {
-    result.value = await window.go.gitdorker.GitdorkerService.Gitdorker(numberA.value, numberB.value)
+    result.value = await window.go.gitdorker.App.Gitdorker(numberA.value, numberB.value)
     console.log("Result from Gitdorker:", result.value)
   } catch (error) {
     console.error("Failed to call Gitdorker:", error)

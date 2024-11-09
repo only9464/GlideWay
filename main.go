@@ -16,7 +16,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	GitdorkerApp := &gitdorker.GitdorkerApp{}
+	GitdorkerApp := &gitdorker.App{}
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:            "GlideWay",

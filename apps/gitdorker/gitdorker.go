@@ -2,10 +2,10 @@ package gitdorker
 
 import "fmt"
 
-type GitdorkerApp struct{}
+type App struct{}
 
 // Gitdorker is a method of GitdorkerService that calls the package-level function
-func (s *GitdorkerApp) Gitdorker(a, b int) int {
+func (s *App) Gitdorker(a, b int) int {
 	return Gitdorker(a, b)
 }
 
