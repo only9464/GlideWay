@@ -1,11 +1,6 @@
 package main
 
 import (
-	"GlideWay/apps/dirsearch"
-	"GlideWay/apps/gitdorker"
-	"GlideWay/apps/scanner"
-
-	"context"
 	"embed"
 
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
@@ -19,10 +14,7 @@ var assets embed.FS
 
 func main() {
 	// Create an instance of the app structure
-	app := NewApp()
-	PorotsScanner := scanner.NewApp()
-	DirsearchApp := dirsearch.NewApp()
-	GitdorkerApp := gitdorker.NewApp()
+	appManager := NewAppManager()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:            "GlideWay",
@@ -30,18 +22,8 @@ func main() {
 		Height:           768,
 		Assets:           assets,
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
-		OnStartup: func(ctx context.Context) {
-			app.startup(ctx)
-			PorotsScanner.Startup(ctx)
-			DirsearchApp.Startup(ctx)
-			GitdorkerApp.Startup(ctx)
-		},
-		Bind: []interface{}{
-			app,
-			PorotsScanner,
-			DirsearchApp,
-			GitdorkerApp,
-		},
+		OnStartup:        appManager.StartupHandler,
+		Bind:             appManager.GetBindings(),
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
