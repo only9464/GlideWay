@@ -268,7 +268,7 @@ const hasAdditionalInfo = (row) => {
 
 const handleStop = async () => {
   try {
-    await window.go.main.App.StopScan()
+    await window.go.scanner.App.StopScan()
     store.setIsScanning(false)
     window.runtime.EventsOff("port-found")
     window.runtime.EventsOff("scan-status")
@@ -340,7 +340,7 @@ const handleScan = async () => {
     })
 
     // 启动扫描
-    await window.go.main.App.ScanPorts(
+    await window.go.scanner.App.ScanPorts(
       target.value,
       start,
       end,

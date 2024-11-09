@@ -3,6 +3,8 @@ package main
 import (
 	"GlideWay/apps/dirsearch"
 	"GlideWay/apps/gitdorker"
+	"GlideWay/apps/scanner"
+
 	"context"
 	"embed"
 
@@ -18,6 +20,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
+	PorotsScanner := scanner.NewApp()
 	DirsearchApp := dirsearch.NewApp()
 	GitdorkerApp := gitdorker.NewApp()
 	// Create application with options
@@ -29,11 +32,13 @@ func main() {
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
 		OnStartup: func(ctx context.Context) {
 			app.startup(ctx)
+			PorotsScanner.Startup(ctx)
 			DirsearchApp.Startup(ctx)
 			GitdorkerApp.Startup(ctx)
 		},
 		Bind: []interface{}{
 			app,
+			PorotsScanner,
 			DirsearchApp,
 			GitdorkerApp,
 		},
