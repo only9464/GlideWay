@@ -87,12 +87,10 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		isStopped.Store(true)
 		closeOnce.Do(func() {
 			close(pathChan)
-		})
-		wg.Wait()
-		closeOnce.Do(func() {
 			close(results)
 			close(errorChan)
 		})
+		wg.Wait()
 	}
 
 	for i := 0; i < numPlugins; i++ {
@@ -159,11 +157,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}
 	}()
 
-	// var (
-	// 	lastScanned   int32 = 0
-	// 	lastTimestamp       = time.Now()
-	// )
-
 	go func() {
 		ticker := time.NewTicker(time.Second)
 		defer ticker.Stop()
@@ -177,16 +170,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			case <-ticker.C:
 				if !isStopped.Load().(bool) {
 					current := atomic.LoadInt32(&actualScanned)
-					// now := time.Now()
-					// speed := float64(current-lastScanned) / now.Sub(lastTimestamp).Seconds()
-					// fmt.Printf("扫描进度: %d/%d (%.2f%%), 实际速度: %.1f/s, 线程数: %d, 插件数: %d\n",
-					// 	current, totalPaths,
-					// 	float64(current)/float64(totalPaths)*100,
-					// 	speed,
-					// 	threadsPerPlugin,
-					// 	numPlugins)
-					// lastScanned = current
-					// lastTimestamp = now
 					progressCallback(int(current), totalPaths)
 				}
 			}
@@ -198,6 +181,10 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		if !isStopped.Load().(bool) {
 			select {
 			case doneChan <- struct{}{}:
+				// 扫描完成时发送最后一次进度更新
+				progressCallback(totalPaths, totalPaths) // 确保显示100%完成
+				// 关闭所有通道
+				cleanup()
 			default:
 			}
 		}
@@ -214,6 +201,8 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 			}
 		case result, ok := <-results:
 			if !ok {
+				// 通道关闭时发送最后一次进度更新
+				progressCallback(totalPaths, totalPaths)
 				return nil
 			}
 			if result == nil || isStopped.Load().(bool) {
@@ -223,7 +212,6 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 		}
 	}
 }
-
 func processPath(ctx context.Context, plugin *gobusterdir.GobusterDir, path string, results chan libgobuster.Result, errorChan chan error) error {
 	// 立即增加计数，而不是等待处理完成
 	atomic.AddInt32(&actualScanned, 1)

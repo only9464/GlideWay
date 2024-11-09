@@ -55,7 +55,7 @@
             <span class="status-text">{{ store.scannedPaths }}/{{ store.totalPaths }} 已扫描</span>
           </div>
           <el-button
-            v-if="!store.isScanning"
+            v-if="!showStopButton"
             @click="handleScan"
             type="primary"
             class="scan-button"
@@ -183,11 +183,12 @@
     </el-table>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { InfoFilled } from '@element-plus/icons-vue'
-import { useDirsearchStore } from '../stores/dirsearchStore'
+import { useDirsearchStore } from '../../stores/dirsearchStore'
 
 const store = useDirsearchStore()
 const target = ref(localStorage.getItem('dirsearch_target') || '')
@@ -198,6 +199,11 @@ const tableHeight = computed(() => window.innerHeight - 300)
 // 分页相关的响应式变量
 const currentPage = ref(1)
 const pageSize = ref(10)
+
+// 添加新的计算属性控制停止按钮显示
+const showStopButton = computed(() => {
+  return store.isScanning && store.scannedPaths < store.totalPaths
+})
 
 // 分页计算属性
 const paginatedPaths = computed(() => {
@@ -319,17 +325,25 @@ const openInBrowser = (url) => {
 
 const handleScan = async () => {
   try {
-    // 清理之前的事件监听
+    // 确保之前的扫描已经完全停止
+    if (store.isScanning) {
+      await handleStop()
+      // 添加短暂延迟确保后端状态完全清理
+      await new Promise(resolve => setTimeout(resolve, 500))
+    }
+    
+    // 先解绑之前的事件监听
     window.runtime.EventsOff("path-found")
     window.runtime.EventsOff("dirsearch-status")
     window.runtime.EventsOff("dirsearch-progress")
+    window.runtime.EventsOff("dirsearch-error")
 
     // 重置状态
     store.resetScan()
     store.setShowProgress(true)
     store.setIsScanning(true)
 
-    // 绑定事件监听
+    // 重新绑定事件监听
     window.runtime.EventsOn("path-found", (pathInfo) => {
       store.addPath(pathInfo)
     })
@@ -350,20 +364,6 @@ const handleScan = async () => {
         store.setScannedPaths(progress.current)
         store.setTotalPaths(progress.total)
         store.setScanSpeed(progress.speed)
-        console.log(`Progress update: ${progress.current}/${progress.total}, Speed: ${progress.speed}/s`)
-
-            // 当扫描完成时
-    if (progress.current >= progress.total) {
-      // 移除所有事件监听
-      window.runtime.EventsOff("path-found")
-      window.runtime.EventsOff("dirsearch-status")
-      window.runtime.EventsOff("dirsearch-progress")
-      
-      // 更新前端状态
-      store.setIsScanning(false)
-      store.setScanStatus('completed')
-    }
-
       }
     })
 
@@ -374,7 +374,8 @@ const handleScan = async () => {
       parseInt(maxThreads.value)
     )
   } catch (err) {
-    ElMessage.error('扫描出错: ' + err.message)
+    console.error('扫描出错:', err)
+    ElMessage.error('扫描出错: ' + (err.message || String(err)))
     store.setIsScanning(false)
     store.setScanStatus('error')
     
@@ -382,34 +383,32 @@ const handleScan = async () => {
     window.runtime.EventsOff("path-found")
     window.runtime.EventsOff("dirsearch-status")
     window.runtime.EventsOff("dirsearch-progress")
+    window.runtime.EventsOff("dirsearch-error")
   }
 }
 
 const handleStop = async () => {
   try {
-    // 1. 立即移除所有事件监听，确保不再接收任何后端事件
+    // 移除所有事件监听
     window.runtime.EventsOff("path-found")
     window.runtime.EventsOff("dirsearch-status")
     window.runtime.EventsOff("dirsearch-progress")
-    window.runtime.EventsOff("dirsearch-error")  // 如果有错误事件监听也要移除
+    window.runtime.EventsOff("dirsearch-error")
 
-    // 2. 更新前端状态为停止中
     store.setIsScanning(false)
     store.setScanStatus('stopping')
 
-    // 3. 通知后端停止扫描
     await window.go.dirsearch.App.StopDirsearch()
     
-    // 4. 显示停止消息
+    // 添加短暂延迟确保后端状态完全清理
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
     ElMessage.info('已停止扫描')
-
   } catch (err) {
-    // 5. 如果出错，也要确保前端状态正确
     store.setIsScanning(false)
     store.setScanStatus('error')
-    ElMessage.error('停止扫描失败: ' + err.message)
+    ElMessage.error('停止扫描失败: ' + (err.message || String(err)))
   } finally {
-    // 6. 确保在任何情况下都重置进度显示
     store.setShowProgress(false)
   }
 }
@@ -430,6 +429,8 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 </script>
+
+
 <style scoped>
 .scanner-component {
   height: 100%;

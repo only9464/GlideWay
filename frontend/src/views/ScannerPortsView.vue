@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import ScannerPorts from '../components/ScannerPorts.vue'; // 导入 Scanner 组件
+import ScannerPorts from '../components/portscanner/ScannerPorts.vue'; // 导入 Scanner 组件
 </script>
 
 <style scoped>

@@ -200,7 +200,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useScannerStore } from '../stores/scannerStore'
+import { useScannerStore } from '../../stores/scannerStore'
 
 const store = useScannerStore()
 
