@@ -75,7 +75,8 @@ func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) err
 	defer dirsearchMutex.Unlock()
 
 	if currentDirsearch != nil {
-		return fmt.Errorf("dirsearch is already running")
+		currentDirsearch = nil
+		// return fmt.Errorf("dirsearch is already running")
 	}
 
 	// 创建新的上下文和控制器

@@ -52,19 +52,22 @@ export const useDirsearchStore = defineStore('dirsearch', {
     setIsScanning(value) {
       this.isScanning = value
       if (!value) {
-        if (this.scanStatus === 'scanning') {
-          this.scanStatus = 'cancelled'
-        }
-        this.scanSpeed = 0  // 停止扫描时重置速度
-      } else {
-        this.scanStatus = 'scanning'
-        this.showProgress = true
-      }
+    // 修改后：只在实际扫描状态下才设置为cancelled
+    if (this.scanStatus === 'scanning') {
+      this.scanStatus = 'cancelled'
+    }
+    this.scanSpeed = 0
+  } else {
+    this.scanStatus = 'scanning'
+    this.showProgress = true
+  }
     },
 
     setScanStatus(status) {
       this.scanStatus = status
       if (status === 'completed' || status === 'cancelled' || status === 'error') {
+        store.setIsScanning(false)
+        store.setShowProgress(false)
         this.isScanning = false
         this.scanSpeed = 0  // 扫描结束时重置速度
       }

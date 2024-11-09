@@ -326,9 +326,8 @@ const openInBrowser = (url) => {
 const handleScan = async () => {
   try {
     // 确保之前的扫描已经完全停止
-    if (store.isScanning) {
+    if (store.isScanning && store.scanStatus === 'scanning') {
       await handleStop()
-      // 添加短暂延迟确保后端状态完全清理
       await new Promise(resolve => setTimeout(resolve, 500))
     }
     
@@ -348,17 +347,25 @@ const handleScan = async () => {
       store.addPath(pathInfo)
     })
 
-    window.runtime.EventsOn("dirsearch-status", (status) => {
-      store.setScanStatus(status)
-      if (status === "completed") {
-        ElMessage.success('扫描完成')
-      } else if (status === "error") {
-        ElMessage.error('扫描出错')
-      } else if (status === "cancelled") {
-        ElMessage.info('扫描已取消')
-      }
-    })
-
+window.runtime.EventsOn("dirsearch-status", (status) => {
+  store.setScanStatus(status)
+  if (status === "completed") {
+    // 在扫描完成时重置扫描状态
+    store.setIsScanning(false)
+    store.setShowProgress(false)
+    ElMessage.success('扫描完成')
+  } else if (status === "error") {
+    // 在扫描出错时也重置状态
+    store.setIsScanning(false)
+    store.setShowProgress(false)
+    ElMessage.error('扫描出错')
+  } else if (status === "cancelled") {
+    // 在扫描取消时也重置状态
+    store.setIsScanning(false)
+    store.setShowProgress(false)
+    ElMessage.info('扫描已取消')
+  }
+})
     window.runtime.EventsOn("dirsearch-progress", (progress) => {
       if (progress && typeof progress.current === 'number' && typeof progress.total === 'number') {
         store.setScannedPaths(progress.current)
@@ -386,7 +393,23 @@ const handleScan = async () => {
     window.runtime.EventsOff("dirsearch-error")
   }
 }
-
+watch(
+  () => [store.scannedPaths, store.totalPaths],
+  ([scanned, total]) => {
+    if (scanned > 0 && total > 0 && scanned >= total) {
+      ElMessage.success('扫描完成')
+      // 清理所有事件监听
+      window.runtime.EventsOff("path-found")
+      window.runtime.EventsOff("dirsearch-status")
+      window.runtime.EventsOff("dirsearch-progress")
+      window.runtime.EventsOff("dirsearch-error")
+      
+      // 重置状态
+      store.setIsScanning(false)
+      store.setShowProgress(false)
+    }
+  }
+)
 const handleStop = async () => {
   try {
     // 移除所有事件监听
