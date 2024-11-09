@@ -10,8 +10,6 @@ export function GetScanProgress():Promise<main.ScanProgress>;
 
 export function GetScanStatus():Promise<string>;
 
-export function OpenFileDialog():Promise<string>;
-
 export function ScanPorts(arg1:string,arg2:number,arg3:number,arg4:number):Promise<void>;
 
 export function StartDirsearch(arg1:string,arg2:string,arg3:number):Promise<void>;

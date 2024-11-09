@@ -18,10 +18,6 @@ export function GetScanStatus() {
   return window['go']['main']['App']['GetScanStatus']();
 }
 
-export function OpenFileDialog() {
-  return window['go']['main']['App']['OpenFileDialog']();
-}
-
 export function ScanPorts(arg1, arg2, arg3, arg4) {
   return window['go']['main']['App']['ScanPorts'](arg1, arg2, arg3, arg4);
 }

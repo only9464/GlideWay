@@ -1,6 +1,7 @@
 package main
 
 import (
+	"GlideWay/apps/gitdorker"
 	"embed"
 
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
@@ -15,7 +16,7 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-
+	GitdorkerApp := &gitdorker.GitdorkerApp{}
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:            "GlideWay",
@@ -26,6 +27,7 @@ func main() {
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
+			GitdorkerApp,
 		},
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,
