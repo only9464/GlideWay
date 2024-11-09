@@ -97,14 +97,37 @@
       </el-button>
     </div>
 
+    <!-- 分页控制器 -->
+    <div class="pagination-container">
+      <el-select v-model="pageSize" class="page-size-select" size="small">
+        <el-option :value="10" label="10条/页" />
+        <el-option :value="20" label="20条/页" />
+        <el-option :value="50" label="50条/页" />
+        <el-option :value="100" label="100条/页" />
+      </el-select>
+      <el-pagination
+        v-model:current-page="currentPage"
+        :page-size="pageSize"
+        :total="openPorts.length"
+        layout="prev, pager, next, jumper"
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+
     <!-- 扫描结果表格 -->
     <el-table 
-      :data="openPorts" 
+      :data="paginatedPorts" 
       style="width: 100%"
       :max-height="500"
       class="acrylic-effect"
     >
-      <el-table-column type="index" label="序号" width="60" />
+<el-table-column type="index" label="序号" width="60">
+  <template #default="scope">
+    {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+  </template>
+</el-table-column>
       <el-table-column prop="port" label="端口" width="100" sortable />
       <el-table-column prop="service" label="服务" width="120">
         <template #default="scope">
@@ -175,11 +198,32 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useScannerStore } from '../stores/scannerStore'
 
 const store = useScannerStore()
+
+// 分页相关的响应式变量
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 分页计算属性
+const paginatedPorts = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return openPorts.value.slice(start, end)
+})
+
+// 分页处理方法
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  currentPage.value = 1
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
 
 // 计算属性
 const target = computed({
@@ -260,7 +304,7 @@ const handleScan = async () => {
     return
   }
 
- try {
+  try {
     // 清理之前的事件监听
     window.runtime.EventsOff("port-found")
     window.runtime.EventsOff("scan-status")
@@ -456,6 +500,18 @@ const handleScan = async () => {
   word-break: break-all;
 }
 
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-size-select {
+  width: 110px;
+}
+
 /* 表格样式 */
 .el-table {
   border-radius: 12px;
@@ -497,6 +553,19 @@ const handleScan = async () => {
 
 /* 深色模式适配 */
 @media (prefers-color-scheme: dark) {
+  :deep(.el-pagination) {
+    --el-pagination-button-bg-color: rgba(255, 255, 255, 0.15);
+    --el-pagination-hover-color: var(--el-color-primary);
+  }
+
+  :deep(.el-select-dropdown__item) {
+    color: #e6e6e6;
+  }
+
+  :deep(.el-select-dropdown__item.selected) {
+    color: var(--el-color-primary);
+  }
+
   .acrylic-input-box,
   .info-box,
   .progress-wrapper,
@@ -564,4 +633,3 @@ const handleScan = async () => {
   }
 }
 </style>
-

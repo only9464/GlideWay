@@ -93,15 +93,38 @@
       </el-button>
     </div>
 
+    <!-- 分页控制器 -->
+    <div class="pagination-container">
+      <el-select v-model="pageSize" class="page-size-select" size="small">
+        <el-option :value="10" label="10条/页" />
+        <el-option :value="20" label="20条/页" />
+        <el-option :value="50" label="50条/页" />
+        <el-option :value="100" label="100条/页" />
+      </el-select>
+      <el-pagination
+        v-model:current-page="currentPage"
+        :page-size="pageSize"
+        :total="store.sortedPaths.length"
+        layout="prev, pager, next, jumper"
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+
     <!-- 扫描结果表格 -->
     <el-table 
-      :data="store.sortedPaths" 
+      :data="paginatedPaths" 
       style="width: 100%"
       :max-height="tableHeight"
       class="acrylic-effect"
       @sort-change="handleSortChange"
     >
-      <el-table-column type="index" label="序号" width="60" />
+      <el-table-column type="index" label="序号" width="60">
+        <template #default="scope">
+          {{ (currentPage - 1) * pageSize + scope.$index + 1 }}
+        </template>
+      </el-table-column>
       <!-- 路径列 -->
       <el-table-column 
         prop="fullUrl" 
@@ -160,7 +183,6 @@
     </el-table>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -172,6 +194,27 @@ const target = ref(localStorage.getItem('dirsearch_target') || '')
 const selectedFile = ref(JSON.parse(localStorage.getItem('dirsearch_selected_file') || 'null'))
 const maxThreads = ref(localStorage.getItem('dirsearch_max_threads') || '10')
 const tableHeight = computed(() => window.innerHeight - 300)
+
+// 分页相关的响应式变量
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+// 分页计算属性
+const paginatedPaths = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return store.sortedPaths.slice(start, end)
+})
+
+// 分页处理方法
+const handleSizeChange = (val) => {
+  pageSize.value = val
+  currentPage.value = 1
+}
+
+const handleCurrentChange = (val) => {
+  currentPage.value = val
+}
 
 // 添加排序处理函数
 const handleSortChange = ({ prop, order }) => {
@@ -374,7 +417,6 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
 </script>
-
 <style scoped>
 .scanner-component {
   height: 100%;
@@ -478,6 +520,18 @@ onUnmounted(() => {
   margin: 10px 0;
 }
 
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-size-select {
+  width: 110px;
+}
+
 /* 表格基础样式 */
 .el-table {
   border-radius: 12px;
@@ -511,6 +565,19 @@ onUnmounted(() => {
     --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.08);
     --el-table-text-color: #e6e6e6;
     --el-table-header-text-color: #ffffff;
+  }
+
+  :deep(.el-pagination) {
+    --el-pagination-button-bg-color: rgba(255, 255, 255, 0.15);
+    --el-pagination-hover-color: var(--el-color-primary);
+  }
+
+  :deep(.el-select-dropdown__item) {
+    color: #e6e6e6;
+  }
+
+  :deep(.el-select-dropdown__item.selected) {
+    color: var(--el-color-primary);
   }
 }
 

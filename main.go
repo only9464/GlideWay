@@ -30,8 +30,10 @@ func main() {
 		Windows: &windows.Options{
 			WebviewIsTransparent: true,
 			WindowIsTranslucent:  true,
+			Theme:                0,
 			BackdropType:         windows.Acrylic, // 使用亚克力效果
 		},
+		WindowStartState: options.Maximised,
 	})
 	if err != nil {
 		println("Error:", err.Error())
