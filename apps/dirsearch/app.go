@@ -1,7 +1,6 @@
-package main
+package dirsearch
 
 import (
-	"GlideWay/apps/dirsearch"
 	"context"
 	"fmt"
 	"sync"
@@ -10,6 +9,20 @@ import (
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
+
+type App struct {
+	ctx context.Context
+}
+
+// NewApp 创建新的 App 实例
+func NewApp() *App {
+	return &App{}
+}
+
+// Startup 在应用启动时初始化上下文
+func (a *App) Startup(ctx context.Context) {
+	a.ctx = ctx
+}
 
 // 目录扫描相关结构体和变量
 type DirsearchProgress struct {
@@ -36,6 +49,21 @@ var (
 	currentDirsearch *DirsearchControl
 	dirsearchMutex   sync.Mutex
 )
+
+// OpenFileDialog 打开文件选择对话框
+func (a *App) OpenFileDialog() (string, error) {
+	options := runtime.OpenDialogOptions{
+		Title: "选择字典文件",
+		Filters: []runtime.FileFilter{
+			{
+				DisplayName: "文本文件 (*.txt)",
+				Pattern:     "*.txt",
+			},
+		},
+	}
+
+	return runtime.OpenFileDialog(a.ctx, options)
+}
 
 // StartDirsearch 启动目录扫描
 func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) error {
@@ -77,13 +105,13 @@ func (a *App) StartDirsearch(target string, dictPath string, maxThreads int) err
 
 		fmt.Printf("开始扫描: target=%s, dictPath=%s, maxThreads=%d\n", target, dictPath, maxThreads)
 
-		err := dirsearch.ScanDir(
+		err := ScanDir(
 			ctx,
 			target,
 			dictPath,
 			maxThreads,
 			// 路径发现回调
-			func(pathInfo dirsearch.PathInfo) {
+			func(pathInfo PathInfo) {
 				dirsearchMutex.Lock()
 				if currentDirsearch == nil {
 					dirsearchMutex.Unlock()

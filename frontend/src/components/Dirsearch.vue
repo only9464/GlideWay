@@ -258,7 +258,7 @@ const normalizeURL = (url) => {
 // 文件选择处理
 const handleSelectFile = async () => {
   try {
-    const filePath = await window.go.main.App.OpenFileDialog()
+    const filePath = await window.go.dirsearch.App.OpenFileDialog()
     if (filePath) {
       selectedFile.value = {
         name: filePath.split('\\').pop().split('/').pop(),
@@ -355,7 +355,7 @@ const handleScan = async () => {
     })
 
     // 启动扫描
-    await window.go.main.App.StartDirsearch(
+    await window.go.dirsearch.App.StartDirsearch(
       normalizeURL(target.value),
       selectedFile.value.path,
       parseInt(maxThreads.value)
@@ -385,7 +385,7 @@ const handleStop = async () => {
     store.setScanStatus('stopping')
 
     // 3. 通知后端停止扫描
-    await window.go.main.App.StopDirsearch()
+    await window.go.dirsearch.App.StopDirsearch()
     
     // 4. 显示停止消息
     ElMessage.info('已停止扫描')

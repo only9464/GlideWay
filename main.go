@@ -1,7 +1,9 @@
 package main
 
 import (
+	"GlideWay/apps/dirsearch"
 	"GlideWay/apps/gitdorker"
+	"context"
 	"embed"
 
 	"github.com/wailsapp/wails/v2/pkg/options/windows"
@@ -16,7 +18,8 @@ var assets embed.FS
 func main() {
 	// Create an instance of the app structure
 	app := NewApp()
-	GitdorkerApp := &gitdorker.App{}
+	DirsearchApp := dirsearch.NewApp()
+	GitdorkerApp := gitdorker.NewApp()
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:            "GlideWay",
@@ -24,9 +27,14 @@ func main() {
 		Height:           768,
 		Assets:           assets,
 		BackgroundColour: &options.RGBA{R: 0, G: 0, B: 0, A: 0},
-		OnStartup:        app.startup,
+		OnStartup: func(ctx context.Context) {
+			app.startup(ctx)
+			DirsearchApp.Startup(ctx)
+			GitdorkerApp.Startup(ctx)
+		},
 		Bind: []interface{}{
 			app,
+			DirsearchApp,
 			GitdorkerApp,
 		},
 		Windows: &windows.Options{

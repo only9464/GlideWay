@@ -5,3 +5,7 @@
 export function Gitdorker(arg1, arg2) {
   return window['go']['gitdorker']['App']['Gitdorker'](arg1, arg2);
 }
+
+export function Startup(arg1) {
+  return window['go']['gitdorker']['App']['Startup'](arg1);
+}

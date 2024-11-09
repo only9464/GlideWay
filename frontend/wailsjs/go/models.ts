@@ -1,4 +1,4 @@
-export namespace main {
+export namespace dirsearch {
 	
 	export class DirsearchProgress {
 	    current: number;
@@ -16,6 +16,11 @@ export namespace main {
 	        this.speed = source["speed"];
 	    }
 	}
+
+}
+
+export namespace main {
+	
 	export class ScanProgress {
 	    current_port: number;
 	    total_ports: number;
