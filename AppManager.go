@@ -3,6 +3,7 @@ package main
 import (
 	"GlideWay/apps/dirsearch"
 	"GlideWay/apps/gitdorker"
+	"GlideWay/apps/jsfinder"
 	"GlideWay/apps/portsscanner"
 	"context"
 )
@@ -15,6 +16,7 @@ func NewAppManager() *AppManager {
 			portsscanner.NewApp(),
 			dirsearch.NewApp(),
 			gitdorker.NewApp(),
+			jsfinder.NewApp(),
 			// 在这里添加新的app即可(嘻嘻)*****
 		},
 	}

@@ -1,17 +1,16 @@
 <template>
   <div class="jsfinder-container">
-    <h1>JSFinder</h1>
-    <div class="input-section">
-      <input v-model="url" placeholder="请输入目标URL" />
-      <button @click="startScan">开始扫描</button>
+    <h1>Jsfinder</h1>
+    <!-- 输入框，用于接受用户输入的两个整数 -->
+    <div>
+      <input type="number" v-model.number="numberA" placeholder="Enter number A" />
+      <input type="number" v-model.number="numberB" placeholder="Enter number B" />
     </div>
-    <div class="results-section" v-if="results.length">
-      <h3>扫描结果：</h3>
-      <ul>
-        <li v-for="(result, index) in results" :key="index">
-          {{ result }}
-        </li>
-      </ul>
+    <!-- 按钮，点击后执行计算 -->
+    <button @click="calculateSum">计算结果</button>
+    <!-- 展示计算结果 -->
+    <div v-if="result !== null">
+      <p>Result: {{ result }}</p>
     </div>
   </div>
 </template>
@@ -19,40 +18,41 @@
 <script setup>
 import { ref } from 'vue'
 
-const url = ref('')
-const results = ref([])
+// 使用 ref 创建响应式变量，用于存储输入数据和计算结果
+const numberA = ref(0)
+const numberB = ref(0)
+const result = ref(null)
 
-const startScan = async () => {
+// 定义方法，调用 Go 后端的 Jsfinder 方法并保存结果
+async function calculateSum() {
   try {
-    // 这里调用后端的扫描方法
-    const response = await window.go.main.ScanJS(url.value)
-    results.value = response
+    result.value = await window.go.jsfinder.App.Jsfinder(numberA.value, numberB.value)
+    console.log("Result from Jsfinder:", result.value)
   } catch (error) {
-    console.error('扫描出错:', error)
+    console.error("Failed to call Jsfinder:", error)
   }
 }
 </script>
 
 <style scoped>
 .jsfinder-container {
+  max-width: 400px;
+  margin: 0 auto;
+  text-align: center;
   padding: 20px;
 }
 
-.input-section {
-  margin: 20px 0;
+input {
+  width: 80px;
+  margin: 5px;
 }
 
-.input-section input {
-  padding: 8px;
-  margin-right: 10px;
-  width: 300px;
+button {
+  margin-top: 10px;
 }
 
-.input-section button {
-  padding: 8px 16px;
-}
-
-.results-section {
-  margin-top: 20px;
+p {
+  margin-top: 10px;
+  font-size: 18px;
 }
 </style>
