@@ -279,7 +279,7 @@ const handleClear = () => {
 
 // 格式化百分比显示
 const percentageFormat = (percentage) => {
-  return percentage === 100 ? '完成' : `${percentage.toFixed(2)}%`
+  return `${percentage.toFixed(2)}%`
 }
 
 // 格式化速度显示
@@ -351,6 +351,19 @@ const handleScan = async () => {
         store.setTotalPaths(progress.total)
         store.setScanSpeed(progress.speed)
         console.log(`Progress update: ${progress.current}/${progress.total}, Speed: ${progress.speed}/s`)
+
+            // 当扫描完成时
+    if (progress.current >= progress.total) {
+      // 移除所有事件监听
+      window.runtime.EventsOff("path-found")
+      window.runtime.EventsOff("dirsearch-status")
+      window.runtime.EventsOff("dirsearch-progress")
+      
+      // 更新前端状态
+      store.setIsScanning(false)
+      store.setScanStatus('completed')
+    }
+
       }
     })
 

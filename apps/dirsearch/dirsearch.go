@@ -225,7 +225,8 @@ func ScanDir(ctx context.Context, target string, dictPath string, maxThreads int
 }
 
 func processPath(ctx context.Context, plugin *gobusterdir.GobusterDir, path string, results chan libgobuster.Result, errorChan chan error) error {
-	defer atomic.AddInt32(&actualScanned, 1)
+	// 立即增加计数，而不是等待处理完成
+	atomic.AddInt32(&actualScanned, 1)
 
 	// 添加URL编码处理
 	path = strings.ReplaceAll(path, "%", "%25") // 首先处理%符号
