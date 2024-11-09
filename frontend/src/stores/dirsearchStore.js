@@ -18,8 +18,8 @@ export const useDirsearchStore = defineStore('dirsearch', {
   getters: {
     scanProgress: (state) => {
       if (state.totalPaths <= 0) return 0
-      const progress = Math.round((state.scannedPaths / state.totalPaths) * 100)
-      return Math.min(progress, 99)
+      const progress = (state.scannedPaths / state.totalPaths) * 100
+      return Math.min(progress, 100)  // 移除 Math.round，允许小数点显示
     },
     
     sortedPaths: (state) => {
