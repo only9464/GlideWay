@@ -18,6 +18,11 @@
               <span>JSFinder</span>
             </router-link>
           </li>
+            <li>
+            <router-link to="/gitdorker" class="nav-link">
+              <span>Gitdorker</span>
+            </router-link>
+          </li>
         </ul>
       </div>
     </div>
