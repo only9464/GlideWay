@@ -16,6 +16,10 @@ func (a *App) Startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
-func (s *App) Gitdorker(a, b int) int {
-	return Gitdorker(a, b)
+func (s *App) GitdorkerCalculate(a, b int) int {
+	return GitdorkerCalculate(a, b)
+}
+func (a *App) Gitdorker(mainKeyword string, subKeyword string, token string) *GithubResult {
+	ctx := context.Background()
+	return SearchGithub(ctx, mainKeyword, subKeyword, token)
 }
