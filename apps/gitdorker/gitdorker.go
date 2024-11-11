@@ -54,7 +54,7 @@ func SearchGithub(ctx context.Context, mainKeyword string, subKeyword string, to
 
 		// 检查速率限制
 		if resp.StatusCode == 403 {
-			fmt.Println("达到 GitHub API 速率限制")
+			fmt.Println("搜索完成  或  达到 GitHub API 速率限制")
 			break
 		}
 

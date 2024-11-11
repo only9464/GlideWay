@@ -13,14 +13,14 @@
               <span>目录扫描器</span>
             </router-link>
           </li>
+         <li>
+            <router-link to="/gitdorker" class="nav-link">
+              <span>Gitdorker</span>
+            </router-link>
+          </li>
           <li>
             <router-link to="/jsfinder" class="nav-link">
               <span>JSFinder</span>
-            </router-link>
-          </li>
-            <li>
-            <router-link to="/gitdorker" class="nav-link">
-              <span>Gitdorker</span>
             </router-link>
           </li>
         </ul>
