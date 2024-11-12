@@ -5,12 +5,26 @@
     <!-- GitHub 搜索部分 -->
     <div class="search-section">
       <input type="text" v-model="mainKeyword" placeholder="主关键词" />
-      <el-input
-        type="textarea"
-        v-model="subKeyword"
-        placeholder="输入多个次关键词（支持空格、逗号、分号、换行符分隔）"
-        :rows="3"
-      />
+      <div class="subkeyword-section">
+        <el-input
+          type="textarea"
+          v-model="subKeyword"
+          placeholder="输入多个次关键词（支持空格、逗号、分号、换行符分隔）"
+          :rows="3"
+        />
+        <el-upload
+          class="upload-btn"
+          action=""
+          :auto-upload="false"
+          :show-file-list="false"
+          accept=".txt"
+          @change="handleFileUpload"
+        >
+          <el-button type="primary" size="small">
+            从文件导入
+          </el-button>
+        </el-upload>
+      </div>
       <input type="text" v-model="token" placeholder="GitHub Token" />
       <button @click="searchGithub" :disabled="isSearching">
         {{ isSearching ? '搜索中...' : '搜索 GitHub' }}
@@ -52,7 +66,10 @@
         align="center"
         header-align="center">
         <template #default="{ row }">
-          <el-link type="primary" :href="row.Link" target="_blank">
+          <el-link 
+            type="primary" 
+            @click="openUrl(row.Link)" 
+            style="cursor: pointer">
             {{ row.Link }}
           </el-link>
         </template>
@@ -72,22 +89,26 @@
     </el-table>
 
     <!-- 数据项详情对话框 -->
-    <el-dialog
+    <el-drawer
       v-model="dialogVisible"
       title="搜索结果详情"
-      width="70%"
+      size="75%"
       :destroy-on-close="true"
+      direction="rtl"
     >
       <el-table :data="dialogData" style="width: 100%">
         <el-table-column label="URL" min-width="180">
           <template #default="{ row }">
-            <el-link type="primary" :href="row" target="_blank">
+            <el-link 
+              type="primary" 
+              @click="openUrl(row)" 
+              style="cursor: pointer">
               {{ row }}
             </el-link>
           </template>
         </el-table-column>
       </el-table>
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
@@ -103,7 +124,18 @@ const subKeyword = ref(store.subKeyword)
 const token = ref(store.token)
 const searchResults = ref([])
 const isSearching = ref(false)
-
+// 添加 openUrl 函数
+const openUrl = (url) => {
+  window.runtime.BrowserOpenURL(url)
+}
+// 添加文件上传处理函数
+const handleFileUpload = (file) => {
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    subKeyword.value = e.target.result
+  }
+  reader.readAsText(file.raw)
+}
 // 使用计算属性来处理关键词分割
 const splitKeywords = computed(() => {
   if (!subKeyword.value) return [];
