@@ -1,38 +1,58 @@
 <template>
-  <div class="Gitdorker-container">
-    <h1>Gitdorker</h1>
-    
-    <!-- GitHub 搜索部分 -->
-    <div class="search-section">
-      <input type="text" v-model="mainKeyword" placeholder="主关键词" />
-      <div class="subkeyword-section">
+  <div class="scanner-component">
+    <!-- 参数配置区域 -->
+    <div class="input-group">
+      <div class="input-item acrylic-input-box">
+        <span class="input-label">主关键词</span>
         <el-input
-          type="textarea"
-          v-model="subKeyword"
-          placeholder="输入多个次关键词（支持空格、逗号、分号、换行符分隔）"
-          :rows="3"
+          v-model="mainKeyword"
+          placeholder="输入主关键词"
+          clearable
         />
-        <el-upload
-          class="upload-btn"
-          action=""
-          :auto-upload="false"
-          :show-file-list="false"
-          accept=".txt"
-          @change="handleFileUpload"
-        >
-          <el-button type="primary" size="small">
-            从文件导入
-          </el-button>
-        </el-upload>
       </div>
-      <input type="text" v-model="token" placeholder="GitHub Token" />
-      <button @click="searchGithub" :disabled="isSearching">
-        {{ isSearching ? '搜索中...' : '搜索 GitHub' }}
-      </button>
-      
-      <!-- 预览分割后的关键词 -->
-      <div v-if="splitKeywords.length > 0" class="preview-keywords">
-        <p>已识别的关键词：</p>
+
+      <div class="input-item acrylic-input-box">
+        <span class="input-label">次关键词</span>
+        <div class="subkeyword-wrapper">
+          <el-input
+            type="textarea"
+            v-model="subKeyword"
+            placeholder="输入多个次关键词（支持空格、逗号、分号、换行符分隔）"
+            :rows="3"
+          />
+          <el-upload
+            class="upload-btn"
+            action=""
+            :auto-upload="false"
+            :show-file-list="false"
+            accept=".txt"
+            @change="handleFileUpload"
+          >
+            <el-button type="primary" size="small">
+              从文件导入
+            </el-button>
+          </el-upload>
+        </div>
+      </div>
+
+      <div class="input-item acrylic-input-box">
+        <span class="input-label">GitHub Token</span>
+        <el-input
+          v-model="token"
+          placeholder="输入 GitHub Token"
+          clearable
+          show-password
+        />
+      </div>
+    </div>
+
+    <!-- 预览关键词区域 -->
+    <div v-if="splitKeywords.length > 0" class="keywords-preview acrylic-mini">
+      <div class="preview-header">
+        <span class="status-text">已识别的关键词</span>
+        <span class="keyword-count">({{ splitKeywords.length }})</span>
+      </div>
+      <div class="keywords-list">
         <el-tag
           v-for="(keyword, index) in splitKeywords"
           :key="index"
@@ -44,51 +64,79 @@
       </div>
     </div>
 
+    <!-- 搜索按钮区域 -->
+    <div class="action-container">
+      <el-button
+        type="primary"
+        :loading="isSearching"
+        @click="searchGithub"
+        class="search-button"
+      >
+        {{ isSearching ? '搜索中...' : '开始搜索' }}
+      </el-button>
+    </div>
+
     <!-- 搜索结果表格 -->
-    <el-table v-if="searchResults.length > 0" :data="searchResults" style="width: 100%; margin-top: 20px">
-      <el-table-column 
-        type="index" 
-        label="序号" 
-        width="80"
+    <el-table
+      v-if="searchResults.length > 0"
+      :data="searchResults"
+      style="width: 100%"
+      size="small"
+      class="acrylic-effect"
+    >
+      <el-table-column
+        type="index"
+        label="序号"
+        width="60"
         align="center"
-        header-align="center" />
+        header-align="center"
+      />
 
-      <el-table-column 
-        prop="Total" 
-        label="总数" 
-        width="120"
+      <el-table-column
+        prop="Total"
+        label="总数"
+        width="100"
         align="center"
-        header-align="center" />
+        header-align="center"
+      />
 
-      <el-table-column 
-        label="搜索链接" 
-        min-width="500"
-        align="center"
-        header-align="center">
+      <el-table-column
+        label="搜索链接"
+        min-width="400"
+        align="left"
+        header-align="center"
+        show-overflow-tooltip
+      >
         <template #default="{ row }">
-          <el-link 
-            type="primary" 
-            @click="openUrl(row.Link)" 
-            style="cursor: pointer">
+          <el-link
+            type="primary"
+            @click="openUrl(row.Link)"
+            style="cursor: pointer"
+          >
             {{ row.Link }}
           </el-link>
         </template>
       </el-table-column>
 
-      <el-table-column 
-        label="Github仓库" 
+      <el-table-column
+        label="Github仓库"
         width="120"
         align="center"
-        header-align="center">
+        header-align="center"
+      >
         <template #default="{ row }">
-          <el-button type="primary" @click="showItemsDialog(row.Items)">
+          <el-button
+            type="primary"
+            size="small"
+            @click="showItemsDialog(row.Items)"
+          >
             查看详情 ({{ row.Items.length }})
           </el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <!-- 数据项详情对话框 -->
+    <!-- 详情抽屉 -->
     <el-drawer
       v-model="dialogVisible"
       title="搜索结果详情"
@@ -96,13 +144,31 @@
       :destroy-on-close="true"
       direction="rtl"
     >
-      <el-table :data="dialogData" style="width: 100%">
-        <el-table-column label="URL" min-width="180">
+      <el-table
+        :data="dialogData"
+        style="width: 100%"
+        size="small"
+      >
+        <el-table-column
+          type="index"
+          label="序号"
+          width="60"
+          align="center"
+          header-align="center"
+        />
+        <el-table-column
+          label="URL"
+          min-width="180"
+          align="left"
+          header-align="center"
+          show-overflow-tooltip
+        >
           <template #default="{ row }">
-            <el-link 
-              type="primary" 
-              @click="openUrl(row)" 
-              style="cursor: pointer">
+            <el-link
+              type="primary"
+              @click="openUrl(row)"
+              style="cursor: pointer"
+            >
               {{ row }}
             </el-link>
           </template>
@@ -111,6 +177,7 @@
     </el-drawer>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed } from 'vue'
@@ -225,59 +292,131 @@ async function searchGithub() {
   }
 }
 </script>
-
 <style scoped>
-.Gitdorker-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-}
-
-.search-section {
+.scanner-component {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 20px 0;
-}
-
-.preview-keywords {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.keyword-tag {
-  margin: 4px;
-}
-
-/* 添加表格内链接样式 */
-:deep(.el-table .cell) {
-  white-space: nowrap;
+  padding: 0 20px;
+  gap: 20px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-input {
-  padding: 8px;
+.input-group {
+  display: flex;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.input-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.input-label {
+  font-size: 13px;
+  color: #606266;
+  font-weight: 500;
+}
+
+.subkeyword-wrapper {
+  position: relative;
   width: 100%;
 }
 
-button {
-  padding: 10px;
-  background-color: #4CAF50;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.upload-btn {
+  position: absolute;
+  right: 0;
+  top: -30px;
 }
 
-button:hover:not(:disabled) {
-  background-color: #45a049;
+.keywords-preview {
+  padding: 12px;
 }
 
-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.keyword-count {
+  color: #909399;
+  font-size: 12px;
+}
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.keyword-tag {
+  margin: 0;
+}
+
+.action-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.search-button {
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 毛玻璃效果类 */
+.acrylic-input-box {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.acrylic-mini {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.acrylic-effect {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  .acrylic-input-box,
+  .acrylic-mini,
+  .acrylic-effect {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .input-label,
+  .status-text {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  :deep(.el-table) {
+    background-color: transparent;
+    --el-table-border-color: rgba(255, 255, 255, 0.1);
+    --el-table-header-bg-color: rgba(255, 255, 255, 0.05);
+    --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.08);
+    --el-table-text-color: #e6e6e6;
+    --el-table-header-text-color: #ffffff;
+  }
 }
 </style>
