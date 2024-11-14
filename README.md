@@ -1,4 +1,4 @@
-![GlideWay](https://socialify.git.ci/only9464/GlideWay/image?description=1&font=Raleway&forks=1&issues=1&language=1&name=1&owner=1&pattern=Overlapping%20Hexagons&pulls=1&stargazers=1&theme=Auto)
+![GlideWay](https://socialify.git.ci/only9464/GlideWay/image?description=1&font=Inter&forks=1&issues=1&logo=https%3A%2F%2Fglideway.github.io%2FDevelopmentDocs%2Fimages%2FG.png&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Auto)
 [![go](https://img.shields.io/github/go-mod/go-version/only9464/GlideWay)]()
 [![size](https://img.shields.io/github/repo-size/only9464/GlideWay)]()
 [![commit](https://img.shields.io/github/last-commit/only9464/GlideWay)]()
@@ -50,7 +50,7 @@
   - [X] 结果精准定位到仓库源码文件
   - [ ] 适配 Gitlab (包括自部署)
   - [ ] 结果导出
-- [X] JSFinder
+- [ ] JSFinder
   - [ ] 多线程扫描
   - [ ] 敏感词结果整合
   - [ ] 加解密算法整合导出
@@ -68,3 +68,12 @@
 ## 关于
 
 本项目为哈尔滨工程大学计算机科学与技术学院2024~2025学年秋季学期**数据安全课程设计**课程的课程设计，原选题为**基于Wails框架的网络扫描工具**
+
+## 鸣谢
+
+下列是本项目使用或者参考的优秀开源框架，感谢网上众多的开源项目及其开源项目的作者，致敬为网络安全事业做出贡献的每一位前辈！(排名不分先后)
+
+* [Slack](https://github.com/qiwentaidi/Slack) - 安全服务集成化工具平台，希望能帮助你少开几个应用测试
+* [GitDorker](https://github.com/obheda12/GitDorker) - A Python program to scrape secrets from GitHub through usage of a large repository of dorks.
+* [gonmap](https://github.com/lcvvvv/gonmap) - gonmap是一个go语言的nmap端口扫描库，使用纯go实现nmap的扫描逻辑，而非调用nmap来进行扫描。
+* [gobuster](https://github.com/OJ/gobuster) - Directory/File, DNS and VHost busting tool written in Godetection
