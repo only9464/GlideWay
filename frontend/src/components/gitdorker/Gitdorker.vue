@@ -78,7 +78,6 @@
 
     <!-- 搜索结果表格 -->
     <el-table
-      v-if="searchResults.length > 0"
       :data="searchResults"
       style="width: 100%"
       size="small"
@@ -88,6 +87,14 @@
         type="index"
         label="序号"
         width="60"
+        align="center"
+        header-align="center"
+      />
+
+      <el-table-column
+        prop="SubKeyword"
+        label="次关键词"
+        width="120"
         align="center"
         header-align="center"
       />
@@ -178,24 +185,48 @@
   </div>
 </template>
 
-
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useGitdorkerStore } from '../../stores/gitdorkerStore'
 import { ElMessage } from 'element-plus'
 
 const store = useGitdorkerStore()
 
+// 响应式状态
 const mainKeyword = ref(store.mainKeyword)
 const subKeyword = ref(store.subKeyword)
 const token = ref(store.token)
-const searchResults = ref([])
-const isSearching = ref(false)
-// 添加 openUrl 函数
-const openUrl = (url) => {
-  window.runtime.BrowserOpenURL(url)
-}
-// 添加文件上传处理函数
+const isSearching = ref(store.isSearching)
+const searchResults = ref(store.searchResults || [])
+const dialogVisible = ref(false)
+const dialogData = ref([])
+
+// 组件挂载时初始化数据
+onMounted(() => {
+  // 从 store 读取已保存的搜索结果
+  if (store.searchResults) {
+    searchResults.value = store.searchResults
+  }
+})
+
+// 计算属性：分割关键词
+const splitKeywords = computed(() => {
+  if (!subKeyword.value) return []
+  
+  // 使用多个分隔符组合的正则表达式
+  const regex = /[,，;；\s\n\r]+/
+  
+  // 分割、过滤空值、去重、去除首尾空格
+  const keywords = subKeyword.value
+    .split(regex)
+    .map(k => k.trim())
+    .filter(k => k !== '')
+    .filter((value, index, self) => self.indexOf(value) === index)
+    
+  return keywords
+})
+
+// 文件上传处理
 const handleFileUpload = (file) => {
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -203,27 +234,13 @@ const handleFileUpload = (file) => {
   }
   reader.readAsText(file.raw)
 }
-// 使用计算属性来处理关键词分割
-const splitKeywords = computed(() => {
-  if (!subKeyword.value) return [];
-  
-  // 使用多个分隔符组合的正则表达式
-  const regex = /[,，;；\s\n\r]+/;
-  
-  // 分割、过滤空值、去重、去除首尾空格
-  const keywords = subKeyword.value
-    .split(regex)
-    .map(k => k.trim())
-    .filter(k => k !== '')
-    .filter((value, index, self) => self.indexOf(value) === index);
-    
-  return keywords;
-});
 
-// 对话框相关
-const dialogVisible = ref(false)
-const dialogData = ref([])
+// 打开URL
+const openUrl = (url) => {
+  window.runtime.BrowserOpenURL(url)
+}
 
+// 显示详情对话框
 const showItemsDialog = (items) => {
   dialogData.value = items
   dialogVisible.value = true
@@ -237,7 +254,13 @@ async function searchSingleKeyword(subKey) {
       subKey,
       token.value
     )
-    return result
+    if (result) {
+      return {
+        ...result,
+        SubKeyword: subKey // 添加次关键词字段
+      }
+    }
+    return null
   } catch (error) {
     console.error(`搜索关键词 "${subKey}" 失败:`, error)
     ElMessage.warning(`关键词 "${subKey}" 搜索失败: ${error.message}`)
@@ -245,30 +268,32 @@ async function searchSingleKeyword(subKey) {
   }
 }
 
-async function searchGithub() {
+// 搜索GitHub
+const searchGithub = async () => {
   try {
     if (!mainKeyword.value) {
-      ElMessage.warning('请输入主关键词');
-      return;
+      ElMessage.warning('请输入主关键词')
+      return
     }
     
     if (splitKeywords.value.length === 0) {
-      ElMessage.warning('请输入至少一个次关键词');
-      return;
+      ElMessage.warning('请输入至少一个次关键词')
+      return
     }
 
     if (!token.value) {
-      ElMessage.warning('请输入 GitHub Token');
-      return;
+      ElMessage.warning('请输入 GitHub Token')
+      return
     }
     
-    isSearching.value = true
     store.setIsSearching(true)
+    isSearching.value = true
     store.setKeywords(mainKeyword.value, subKeyword.value)
     store.setToken(token.value)
     
     // 清空之前的搜索结果
     searchResults.value = []
+    store.setSearchResults(null)
     
     // 逐个搜索每个关键词
     for (const keyword of splitKeywords.value) {
@@ -276,12 +301,20 @@ async function searchGithub() {
       if (result) {
         searchResults.value.push(result)
       }
-      // 可以添加适当的延时，避免触发 GitHub API 限制
+      // 添加延时避免触发 GitHub API 限制
       await new Promise(resolve => setTimeout(resolve, 1000))
+    }
+
+    // 更新 store 中的搜索结果
+    store.setSearchResults(searchResults.value)
+    
+    if (searchResults.value.length === 0) {
+      ElMessage.info('未找到相关结果')
+    } else {
+      ElMessage.success(`找到 ${searchResults.value.length} 条结果`)
     }
     
     store.setSearchStatus('completed')
-    console.log("GitHub search results:", searchResults.value)
   } catch (error) {
     console.error("搜索 GitHub 失败:", error)
     store.setSearchStatus('error')
@@ -291,6 +324,32 @@ async function searchGithub() {
     store.setIsSearching(false)
   }
 }
+
+// 监听 store 中的值变化
+watch(() => store.mainKeyword, (newVal) => {
+  mainKeyword.value = newVal
+})
+
+watch(() => store.subKeyword, (newVal) => {
+  subKeyword.value = newVal
+})
+
+watch(() => store.token, (newVal) => {
+  token.value = newVal
+})
+
+watch(() => store.isSearching, (newVal) => {
+  isSearching.value = newVal
+})
+
+// 监听 store 中的搜索结果变化
+watch(() => store.searchResults, (newVal) => {
+  if (newVal) {
+    searchResults.value = newVal
+  } else {
+    searchResults.value = []
+  }
+})
 </script>
 <style scoped>
 .scanner-component {
@@ -418,5 +477,16 @@ async function searchGithub() {
     --el-table-text-color: #e6e6e6;
     --el-table-header-text-color: #ffffff;
   }
+}
+
+:deep(.el-table__empty-block) {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  margin: 8px;
+}
+
+:deep(.el-table__empty-text) {
+  color: #909399;
 }
 </style>
