@@ -1,4 +1,5 @@
 ![GlideWay](https://socialify.git.ci/only9464/GlideWay/image?description=1&font=Inter&forks=1&issues=1&logo=https%3A%2F%2Fglideway.github.io%2FDevelopmentDocs%2Fimages%2FG.png&name=1&owner=1&pattern=Floating%20Cogs&pulls=1&stargazers=1&theme=Auto)
+
 <p align="center">
   <a href="https://wails.io">
     <img src="https://img.shields.io/github/v/release/wailsapp/wails?label=Wails&color=red&logo=wails" alt="Wails">
@@ -18,25 +19,16 @@
   <a href="https://github.com/only9464/GlideWay">
     <img src="https://img.shields.io/github/contributors/only9464/GlideWay?logo=renpy" alt="Contributors">
   </a>
-  <a href="https://github.com/only9464/GlideWay">
+  <!-- <a href="https://github.com/only9464/GlideWay">
     <img src="https://img.shields.io/badge/stable-stable-green.svg?logo=checkmarx" alt="Stable">
-  </a>
+  </a> -->
   <a href="https://github.com/only9464/GlideWay?tab=MPL-2.0-1-ov-file">
     <img src="https://img.shields.io/github/license/only9464/GlideWay?logo=unlicense" alt="License">
   </a>
 </p>
-
-<!-- [![download](https://img.shields.io/github/downloads/only9464/GlideWay/total)]()
-[![release](https://img.shields.io/github/v/release/only9464/GlideWay)]() -->
-
 <div align="center">
 <img src="https://cdn.jsdelivr.net/gh/eryajf/tu@main/img/image_20240420_214408.gif" width="800"  height="3">
 </div>
-<!-- <p align="center">
-  <a href="https://count.getloli.com" target="_blank">
-    <img alt="Moe Counter!" src="https://count.getloli.com/@GlideWay?name=GlideWay&theme=random&padding=7&offset=0&align=top&scale=1&pixelated=1&darkmode=auto">
-  </a>
-</p> -->
 
 ## 声明
 

@@ -5,7 +5,7 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig({
   plugins: [vue()],
   server: {
-    port: 8888, // 使用其他端口
+    port: 9494, // 使用其他端口
     strictPort: true
   }
 })
