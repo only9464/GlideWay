@@ -34,6 +34,31 @@
 
 **本程序仅供于学习交流，请使用者遵守[《中华人民共和国网络安全法》](https://www.gov.cn/xinwen/2016-11/07/content_5129723.htm)，勿将此工具用于非授权的测试，开发者不负任何连带法律责任。**
 
+## 快速开始
+
+### ①安装环境依赖(版本请参考以上徽章中的版本号)
+
+- [Go](https://go.dev/)
+- [Wails](https://wails.io/)
+- [Node.js](https://nodejs.org/)
+- [npm](https://www.npmjs.com/)
+
+###  ②从源码调试运行
+
+Windows：
+
+```powershell
+wails dev
+```
+
+###  ③编译
+
+Windows：
+
+```powershell
+wails build
+```
+
 ## 介绍
 
 - [X] 端口扫描器
